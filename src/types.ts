@@ -12,8 +12,11 @@ export interface VOLine {
   audioUrl: string | null
 }
 
+export type PipelineMode = 'translate-tts' | 'direct-tts'
+
 export interface Config {
   apiKey: string
+  mode: PipelineMode
   language: string
   speaker: string
   model: ModelVersion

@@ -12,6 +12,7 @@ import type { Config, VOLine } from './types'
 
 const DEFAULT_CONFIG: Config = {
   apiKey: '',
+  mode: 'translate-tts',
   language: 'en-IN',
   speaker: 'shubh',
   model: 'bulbul:v3',
@@ -46,6 +47,8 @@ export default function App() {
   configRef.current = config
 
   function handleConfigChange(next: Config) {
+    // Direct TTS mode never translates
+    if (next.mode === 'direct-tts') next = { ...next, translateFirst: false }
     setConfig(next)
     // If codec changed and we already have parsed lines, update filenames
     if (next.outputCodec !== config.outputCodec) {
@@ -168,10 +171,10 @@ export default function App() {
           <div className="hero-banner">
             <span className="hero-pill">bulbul:v3 · Sarvam TTS</span>
             <h2 className="hero-title">Qwipo Voice Studio</h2>
-            <p className="hero-sub">Upload an English .docx script — it auto-translates each line to your target language, then synthesizes speech. Download everything as a ZIP.</p>
+            <p className="hero-sub">Upload a .docx script and synthesize speech in any of 11 Indian languages — translate from English first, or go direct if your script is already in the target language.</p>
             <div className="hero-tags">
-              <span className="hero-tag">① Translate EN → target</span>
-              <span className="hero-tag">② Text-to-Speech</span>
+              <span className="hero-tag">Translate EN → target</span>
+              <span className="hero-tag">Direct TTS</span>
               <span className="hero-tag">37 voices · 11 languages</span>
               <span className="hero-tag">ZIP download</span>
             </div>
@@ -194,6 +197,7 @@ export default function App() {
         <Step2Review
           lines={lines}
           filename={file?.name ?? ''}
+          config={config}
           onBack={() => setStep(1)}
           onStart={() => startProcessing(lines)}
         />
@@ -206,6 +210,7 @@ export default function App() {
           total={lines.length}
           cancelled={cancelled}
           translateFirst={config.translateFirst && config.language !== 'en-IN'}
+          config={config}
           onCancel={() => { cancelledRef.current = true; setCancelled(true) }}
           onRetryFailed={handleRetryFailed}
         />

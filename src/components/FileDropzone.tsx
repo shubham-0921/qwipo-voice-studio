@@ -4,9 +4,10 @@ import { Upload, FileCheck, Download } from 'lucide-react'
 interface Props {
   file: File | null
   onFile: (f: File) => void
+  hint?: string
 }
 
-export function FileDropzone({ file, onFile }: Props) {
+export function FileDropzone({ file, onFile, hint }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
 
@@ -50,7 +51,7 @@ export function FileDropzone({ file, onFile }: Props) {
             Drop your <code>.docx</code> file here
           </p>
           <p className="dropzone-sub">or click to browse</p>
-          <p className="dropzone-hint">Script must be in English — it will be translated &amp; synthesized automatically</p>
+          <p className="dropzone-hint">{hint ?? 'Upload a .docx script file'}</p>
           <a
             className="sample-btn"
             href="/sample-script.docx"

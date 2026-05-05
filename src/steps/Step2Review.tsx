@@ -1,22 +1,30 @@
 import { ArrowLeft, Play as PlayIcon } from 'lucide-react'
-import type { VOLine } from '../types'
+import type { VOLine, Config } from '../types'
 import { VOTable } from '../components/VOTable'
+import { PipelineBadge } from '../components/PipelineBadge'
 
 interface Props {
   lines: VOLine[]
   filename: string
+  config: Config
   onBack: () => void
   onStart: () => void
 }
 
-export function Step2Review({ lines, filename, onBack, onStart }: Props) {
+export function Step2Review({ lines, filename, config, onBack, onStart }: Props) {
   return (
     <div className="card">
       <p className="card-label">Step 2 — Review Extracted VO Lines</p>
 
+      <PipelineBadge config={config} />
+
       <div className="info-box">
         Found <strong>{lines.length} VO line{lines.length !== 1 ? 's' : ''}</strong> in{' '}
-        <strong>{filename}</strong>. Confirm the extraction looks correct, then start processing.
+        <strong>{filename}</strong>.{' '}
+        {config.mode === 'direct-tts'
+          ? 'Script will be synthesized directly — no translation.'
+          : 'Confirm the extraction looks correct, then start processing.'
+        }
       </div>
 
       <VOTable lines={lines} />

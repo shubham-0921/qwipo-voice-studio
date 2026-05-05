@@ -1,6 +1,7 @@
 import { RotateCcw, X, Languages, Mic } from 'lucide-react'
-import type { VOLine } from '../types'
+import type { VOLine, Config } from '../types'
 import { VOTable } from '../components/VOTable'
+import { PipelineBadge } from '../components/PipelineBadge'
 
 interface Props {
   lines: VOLine[]
@@ -9,11 +10,12 @@ interface Props {
   total: number
   cancelled: boolean
   translateFirst: boolean
+  config: Config
   onCancel: () => void
   onRetryFailed: () => void
 }
 
-export function Step3Processing({ lines, done, failed, total, cancelled, translateFirst, onCancel, onRetryFailed }: Props) {
+export function Step3Processing({ lines, done, failed, total, cancelled, translateFirst, config, onCancel, onRetryFailed }: Props) {
   const finished = done + failed === total || cancelled
   const pct = total > 0 ? ((done + failed) / total) * 100 : 0
   const allSucceeded = finished && failed === 0
@@ -24,6 +26,8 @@ export function Step3Processing({ lines, done, failed, total, cancelled, transla
   return (
     <div className="card">
       <p className="card-label">Step 3 — Processing</p>
+
+      <PipelineBadge config={config} />
 
       <div className="progress-section">
         <div className="progress-header">
@@ -58,7 +62,7 @@ export function Step3Processing({ lines, done, failed, total, cancelled, transla
         )}
       </div>
 
-      <VOTable lines={lines} translateFirst={translateFirst} />
+      <VOTable lines={lines} translateFirst={translateFirst} showPlay />
 
       <div className="actions">
         <button

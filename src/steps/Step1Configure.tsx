@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Eye, EyeOff, ArrowRight, Info } from 'lucide-react'
+import { Eye, EyeOff, ArrowRight, Info, Languages, Mic } from 'lucide-react'
 import { FileDropzone } from '../components/FileDropzone'
-import type { Config, ModelVersion } from '../types'
+import type { Config, ModelVersion, PipelineMode } from '../types'
 import {
   LANGUAGES, MODELS, OUTPUT_CODECS,
   SAMPLE_RATES_V3, SAMPLE_RATES_V2,
@@ -49,6 +49,7 @@ export function Step1Configure({ config, file, onFile, onConfigChange, onNext, l
   const isV3   = config.model === 'bulbul:v3'
   const speakers = getSpeakers(config.model)
   const sampleRates = isV3 ? SAMPLE_RATES_V3 : SAMPLE_RATES_V2
+  const isDirectTTS = config.mode === 'direct-tts'
 
   function set<K extends keyof Config>(key: K, value: Config[K]) {
     onConfigChange({ ...config, [key]: value })
@@ -60,14 +61,60 @@ export function Step1Configure({ config, file, onFile, onConfigChange, onNext, l
     onConfigChange({ ...config, model, speaker, sampleRate })
   }
 
+  function handleModeChange(mode: PipelineMode) {
+    onConfigChange({
+      ...config,
+      mode,
+      translateFirst: mode === 'translate-tts',
+    })
+  }
+
+  const dropzoneHint = isDirectTTS
+    ? 'Upload your script already written in the target language'
+    : 'Script must be in English — each line will be translated then synthesized'
+
+  const langLabel = isDirectTTS ? 'Script Language' : 'Target Speech Language'
+
   return (
     <div className="card">
       <p className="card-label">Step 1 — Configure</p>
 
+      {/* Mode selector */}
+      <div className="mode-selector">
+        <button
+          type="button"
+          className={`mode-card ${!isDirectTTS ? 'mode-card-active' : ''}`}
+          onClick={() => handleModeChange('translate-tts')}
+        >
+          <div className="mode-card-icons">
+            <Languages size={18} />
+            <span className="mode-arrow">→</span>
+            <Mic size={18} />
+          </div>
+          <div className="mode-card-body">
+            <strong>Translate &amp; Speak</strong>
+            <span>Upload English script · auto-translate · synthesize</span>
+          </div>
+        </button>
+        <button
+          type="button"
+          className={`mode-card ${isDirectTTS ? 'mode-card-active' : ''}`}
+          onClick={() => handleModeChange('direct-tts')}
+        >
+          <div className="mode-card-icons">
+            <Mic size={18} />
+          </div>
+          <div className="mode-card-body">
+            <strong>Direct TTS</strong>
+            <span>Upload script in target language · synthesize only</span>
+          </div>
+        </button>
+      </div>
+
       {/* File upload */}
       <div className="field-full">
         <label>Script File <span className="required">required</span></label>
-        <FileDropzone file={file} onFile={onFile} />
+        <FileDropzone file={file} onFile={onFile} hint={dropzoneHint} />
       </div>
 
       {/* Model + Language + Speaker */}
@@ -82,7 +129,7 @@ export function Step1Configure({ config, file, onFile, onConfigChange, onNext, l
         </div>
 
         <div className="field">
-          <label>Target Speech Language</label>
+          <label>{langLabel}</label>
           <select value={config.language} onChange={e => set('language', e.target.value)}>
             {LANGUAGES.map(l => (
               <option key={l.code} value={l.code}>{l.code} — {l.label}</option>
@@ -100,26 +147,28 @@ export function Step1Configure({ config, file, onFile, onConfigChange, onNext, l
         </div>
       </div>
 
-      {/* Translate + TTS pipeline toggle */}
-      <div className="translate-row">
-        <label className="toggle-wrap">
-          <input
-            type="checkbox"
-            className="toggle-check"
-            checked={config.translateFirst}
-            onChange={e => set('translateFirst', e.target.checked)}
-          />
-          <span className="toggle-label-text">
-            Two-step pipeline: <strong>Translate EN → {config.language}</strong>, then <strong>Text-to-Speech</strong>
-          </span>
-        </label>
-        {config.translateFirst && config.language === 'en-IN'
-          ? <p className="field-note pipeline-note">Target is already English — only Text-to-Speech will run</p>
-          : config.translateFirst
-          ? <p className="field-note pipeline-note">Each line will be translated to <strong>{config.language}</strong> first, then synthesized as speech</p>
-          : <p className="field-note pipeline-note">Translation skipped — raw script text will be sent to TTS</p>
-        }
-      </div>
+      {/* Translate toggle — only visible in translate-tts mode */}
+      {!isDirectTTS && (
+        <div className="translate-row">
+          <label className="toggle-wrap">
+            <input
+              type="checkbox"
+              className="toggle-check"
+              checked={config.translateFirst}
+              onChange={e => set('translateFirst', e.target.checked)}
+            />
+            <span className="toggle-label-text">
+              Two-step pipeline: <strong>Translate EN → {config.language}</strong>, then <strong>Text-to-Speech</strong>
+            </span>
+          </label>
+          {config.translateFirst && config.language === 'en-IN'
+            ? <p className="field-note pipeline-note">Target is already English — only Text-to-Speech will run</p>
+            : config.translateFirst
+            ? <p className="field-note pipeline-note">Each line will be translated to <strong>{config.language}</strong> first, then synthesized as speech</p>
+            : <p className="field-note pipeline-note">Translation skipped — raw script text will be sent to TTS</p>
+          }
+        </div>
+      )}
 
       {/* API Key */}
       <div className="field" style={{ marginTop: 28 }}>
